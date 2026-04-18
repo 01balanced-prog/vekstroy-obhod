@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Векстрой">
+<meta name="theme-color" content="#111111">
+<title>Векстрой — Чек-лист</title>
+<style>
+  :root {
+    --black: #111111;
+    --green: #1a7a3c;
+    --green-light: #22a050;
+    --green-dim: #0f4a24;
+    --white: #f5f5f0;
+    --gray: #888880;
+    --gray-light: #e8e8e2;
+    --gray-dark: #2a2a2a;
+    --red: #c0392b;
+    --surface: #1c1c1c;
+    --surface2: #242424;
+    --border: #333333;
+    --font: 'Georgia', serif;
+    --font-ui: system-ui, -apple-system, sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    background: var(--black);
+    color: var(--white);
+    font-family: var(--font-ui);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* SCREENS */
+  .screen { display: none; min-height: 100vh; flex-direction: column; }
+  .screen.active { display: flex; }
+
+  /* HEADER */
+  .header {
+    background: var(--black);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .header-logo {
+    font-family: var(--font);
+    font-size: 18px;
+    font-weight: bold;
+    color: var(--green-light);
+    letter-spacing: 1px;
+  }
+  .header-title {
+    font-size: 14px;
+    color: var(--gray);
+    flex: 1;
+  }
+  .back-btn {
+    background: none;
+    border: none;
+    color: var(--green-light);
+    font-size: 22px;
+    cursor: pointer;
+    padding: 4px 8px 4px 0;
+    line-height: 1;
+  }
+
+  /* HOME SCREEN */
+  .home-content {
+    flex: 1;
+    padding: 32px 20px;
+  }
+  .home-greeting {
+    font-family: var(--font);
+    font-size: 28px;
+    color: var(--white);
+    margin-bottom: 4px;
+  }
+  .home-sub {
+    font-size: 14px;
+    color: var(--gray);
+    margin-bottom: 40px;
+  }
+
+  .section-label {
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--gray);
+    margin-bottom: 12px;
+  }
+
+  .point-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .point-card:active { background: var(--surface2); }
+  .point-card:hover { border-color: var(--green-dim); }
+  .point-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    background: var(--green-dim);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+  .point-info { flex: 1; }
+  .point-name { font-size: 16px; font-weight: 600; color: var(--white); margin-bottom: 2px; }
+  .point-desc { font-size: 13px; color: var(--gray); }
+  .point-arrow { color: var(--green-light); font-size: 18px; }
+
+  .pending-badge {
+    background: var(--red);
+    color: white;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 20px;
+    margin-left: 8px;
+  }
+
+  /* INSPECTOR FORM */
+  .inspector-form {
+    padding: 24px 20px;
+    flex: 1;
+  }
+  .field-label {
+    font-size: 12px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--gray);
+    margin-bottom: 8px;
+    display: block;
+  }
+  .field-input {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-size: 16px;
+    color: var(--white);
+    margin-bottom: 20px;
+    outline: none;
+    font-family: var(--font-ui);
+  }
+  .field-input:focus { border-color: var(--green-light); }
+
+  .start-btn {
+    width: 100%;
+    background: var(--green);
+    border: none;
+    border-radius: 12px;
+    padding: 16px;
+    font-size: 16px;
+    font-weight: 600;
+    color: white;
+    cursor: pointer;
+    transition: background 0.2s;
+    margin-top: 8px;
+  }
+  .start-btn:active { background: var(--green-dim); }
+
+  /* ZONE LIST */
+  .zone-list { flex: 1; overflow-y: auto; padding: 16px 20px; }
+  .zone-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: border-color 0.15s;
+  }
+  .zone-item:active { background: var(--surface2); }
+  .zone-item.done { border-color: var(--green-dim); }
+  .zone-num {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--gray-dark);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 600;
+    flex-shrink: 0;
+    color: var(--gray);
+  }
+  .zone-item.done .zone-num { background: var(--green-dim); color: var(--green-light); }
+  .zone-info { flex: 1; }
+  .zone-name { font-size: 15px; font-weight: 500; color: var(--white); }
+  .zone-status { font-size: 12px; color: var(--gray); margin-top: 2px; }
+  .zone-item.done .zone-status { color: var(--green-light); }
+  .zone-check { font-size: 18px; color: var(--green-light); opacity: 0; }
+  .zone-item.done .zone-check { opacity: 1; }
+
+  .submit-bar {
+    padding: 16px 20px;
+    border-top: 1px solid var(--border);
+    background: var(--black);
+  }
+  .submit-btn {
+    width: 100%;
+    background: var(--green);
+    border: none;
+    border-radius: 12px;
+    padding: 16px;
+    font-size: 16px;
+    font-weight: 600;
+    color: white;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .submit-btn:disabled { background: var(--gray-dark); color: var(--gray); cursor: not-allowed; }
+  .submit-btn:not(:disabled):active { background: var(--green-dim); }
+
+  /* QUESTIONS */
+  .questions-list { flex: 1; overflow-y: auto; padding: 16px 20px 100px; }
+
+  .question-block {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 10px;
+  }
+  .question-text {
+    font-size: 15px;
+    color: var(--white);
+    line-height: 1.5;
+    margin-bottom: 12px;
+  }
+
+  .vx-btns { display: flex; gap: 8px; }
+  .vx-btn {
+    flex: 1;
+    padding: 12px;
+    border-radius: 10px;
+    border: 1.5px solid var(--border);
+    font-size: 18px;
+    font-weight: 700;
+    cursor: pointer;
+    background: transparent;
+    color: var(--gray);
+    transition: all 0.15s;
+  }
+  .vx-btn.v-btn.selected { background: var(--green-dim); border-color: var(--green-light); color: var(--green-light); }
+  .vx-btn.x-btn.selected { background: #3a1515; border-color: var(--red); color: var(--red); }
+
+  .text-answer {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px;
+    font-size: 15px;
+    color: var(--white);
+    min-height: 80px;
+    resize: none;
+    outline: none;
+    font-family: var(--font-ui);
+    line-height: 1.5;
+  }
+  .text-answer:focus { border-color: var(--green-light); }
+
+  .photos-block {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 10px;
+  }
+  .photos-title {
+    font-size: 13px;
+    color: var(--gray);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .photos-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .photo-thumb {
+    aspect-ratio: 1;
+    border-radius: 8px;
+    object-fit: cover;
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    position: relative;
+  }
+  .photo-thumb-wrap {
+    position: relative;
+  }
+  .photo-thumb-wrap img {
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+    border-radius: 8px;
+    display: block;
+  }
+  .photo-remove {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    background: rgba(0,0,0,0.7);
+    border: none;
+    border-radius: 50%;
+    width: 22px;
+    height: 22px;
+    color: white;
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+  }
+  .add-photo-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--surface2);
+    border: 1.5px dashed var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    cursor: pointer;
+    color: var(--gray);
+    font-size: 14px;
+    width: 100%;
+    transition: border-color 0.15s;
+  }
+  .add-photo-btn:active { border-color: var(--green-light); color: var(--green-light); }
+  input[type="file"] { display: none; }
+
+  .zone-done-btn {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 16px 20px;
+    background: var(--black);
+    border-top: 1px solid var(--border);
+  }
+  .zone-done-btn button {
+    width: 100%;
+    background: var(--green);
+    border: none;
+    border-radius: 12px;
+    padding: 16px;
+    font-size: 16px;
+    font-weight: 600;
+    color: white;
+    cursor: pointer;
+  }
+  .zone-done-btn button:active { background: var(--green-dim); }
+
+  /* PROGRESS BAR */
+  .progress-bar {
+    height: 3px;
+    background: var(--border);
+    position: relative;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--green-light);
+    transition: width 0.3s;
+  }
+
+  /* SUCCESS */
+  .success-screen {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 24px;
+    text-align: center;
+  }
+  .success-icon { font-size: 64px; margin-bottom: 20px; }
+  .success-title { font-family: var(--font); font-size: 26px; margin-bottom: 10px; }
+  .success-sub { font-size: 15px; color: var(--gray); margin-bottom: 40px; line-height: 1.6; }
+  .home-again-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 32px;
+    font-size: 15px;
+    color: var(--white);
+    cursor: pointer;
+  }
+
+  /* OFFLINE BANNER */
+  .offline-banner {
+    background: #3a2800;
+    border-bottom: 1px solid #664400;
+    padding: 8px 20px;
+    font-size: 13px;
+    color: #ffaa44;
+    text-align: center;
+    display: none;
+  }
+  .offline-banner.visible { display: block; }
+
+  /* LOADING */
+  .loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    color: var(--gray);
+    font-size: 14px;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .spinner {
+    width: 24px;
+    height: 24px;
+    border: 2px solid var(--border);
+    border-top-color: var(--green-light);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .sync-status {
+    font-size: 12px;
+    color: var(--gray);
+    text-align: center;
+    padding: 8px;
+  }
+</style>
+</head>
+<body>
+
+<!-- OFFLINE BANNER -->
+<div class="offline-banner" id="offlineBanner">Нет интернета — ответы сохранены и будут отправлены при подключении</div>
+
+<!-- SCREEN 1: HOME -->
+<div class="screen active" id="homeScreen">
+  <div class="header">
+    <div class="header-logo">ВЕКСТРОЙ</div>
+    <div class="header-title">Чек-листы</div>
+    <div id="pendingCount" class="sync-status"></div>
+  </div>
+  <div class="home-content">
+    <div class="home-greeting">Добрый день</div>
+    <div class="home-sub">Выберите точку для проверки</div>
+
+    <div class="section-label">Базы</div>
+
+    <div class="point-card" onclick="selectPoint('Назрань')">
+      <div class="point-icon">🏭</div>
+      <div class="point-info">
+        <div class="point-name">Назрань</div>
+        <div class="point-desc">9 зон · Основная база</div>
+      </div>
+      <div class="point-arrow">›</div>
+    </div>
+
+    <div class="point-card" onclick="selectPoint('Кантышево')">
+      <div class="point-icon">🏗️</div>
+      <div class="point-info">
+        <div class="point-name">Кантышево</div>
+        <div class="point-desc">7 зон · База 3</div>
+      </div>
+      <div class="point-arrow">›</div>
+    </div>
+
+    <div class="point-card" style="opacity:0.4; cursor:not-allowed;" onclick="alert('Карабулак — скоро будет добавлен')">
+      <div class="point-icon">📦</div>
+      <div class="point-info">
+        <div class="point-name">Карабулак</div>
+        <div class="point-desc">Скоро</div>
+      </div>
+      <div class="point-arrow">›</div>
+    </div>
+  </div>
+</div>
+
+<!-- SCREEN 2: INSPECTOR -->
+<div class="screen" id="inspectorScreen">
+  <div class="header">
+    <button class="back-btn" onclick="goHome()">‹</button>
+    <div class="header-logo">ВЕКСТРОЙ</div>
+    <div class="header-title" id="inspectorPointName"></div>
+  </div>
+  <div class="inspector-form">
+    <label class="field-label">Кто проверяет</label>
+    <input class="field-input" id="inspectorName" type="text" placeholder="Имя проверяющего" autocomplete="off" autocorrect="off" spellcheck="false">
+
+    <label class="field-label">Дата обхода</label>
+    <input class="field-input" id="inspectorDate" type="date">
+
+    <button class="start-btn" onclick="startChecklist()">Начать обход →</button>
+  </div>
+</div>
+
+<!-- SCREEN 3: ZONE LIST -->
+<div class="screen" id="zoneScreen">
+  <div class="header">
+    <button class="back-btn" onclick="showScreen('inspectorScreen')">‹</button>
+    <div class="header-logo">ВЕКСТРОЙ</div>
+    <div class="header-title" id="zonePointName"></div>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+  <div class="zone-list" id="zoneList">
+    <div class="loading"><div class="spinner"></div>Загрузка вопросов...</div>
+  </div>
+  <div class="submit-bar">
+    <button class="submit-btn" id="submitBtn" onclick="submitAll()" disabled>Отправить результаты</button>
+  </div>
+</div>
+
+<!-- SCREEN 4: QUESTIONS -->
+<div class="screen" id="questionScreen">
+  <div class="header">
+    <button class="back-btn" onclick="showScreen('zoneScreen')">‹</button>
+    <div class="header-title" id="questionZoneName" style="font-size:13px; color:#aaa;"></div>
+  </div>
+  <div class="questions-list" id="questionsList"></div>
+  <div class="zone-done-btn">
+    <button onclick="saveZone()">Сохранить зону ✓</button>
+  </div>
+</div>
+
+<!-- SCREEN 5: SUCCESS -->
+<div class="screen" id="successScreen">
+  <div class="header">
+    <div class="header-logo">ВЕКСТРОЙ</div>
+  </div>
+  <div class="success-screen">
+    <div class="success-icon">✅</div>
+    <div class="success-title">Обход завершён</div>
+    <div class="success-sub" id="successMsg">Результаты сохранены и отправлены в таблицу.</div>
+    <button class="home-again-btn" onclick="goHome()">На главную</button>
+  </div>
+</div>
+
+<script>
+const API_URL = 'https://script.google.com/macros/s/AKfycbwXhbUsyzeCjVCzAjEjBEJ24kAggqN-sbBVY8wTafQnzLrS8gtoxULvLNXOcVEBHTSm/exec';
+const CACHE_KEY = 'vekstroy_questions';
+const PENDING_KEY = 'vekstroy_pending';
+
+let currentPoint = '';
+let currentInspector = '';
+let currentDate = '';
+let allQuestions = {};
+let zones = [];
+let zoneAnswers = {};
+let currentZone = '';
+
+// --- OFFLINE DETECTION ---
+function updateOnlineStatus() {
+  document.getElementById('offlineBanner').classList.toggle('visible', !navigator.onLine);
+  if (navigator.onLine) trySyncPending();
+}
+window.addEventListener('online', updateOnlineStatus);
+window.addEventListener('offline', updateOnlineStatus);
+updateOnlineStatus();
+
+// --- NAVIGATION ---
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+function goHome() {
+  currentPoint = '';
+  zoneAnswers = {};
+  zones = [];
+  showScreen('homeScreen');
+  updatePendingCount();
+}
+
+// --- PENDING SYNC ---
+function getPending() {
+  try { return JSON.parse(localStorage.getItem(PENDING_KEY) || '[]'); } catch(e) { return []; }
+}
+function savePending(arr) {
+  localStorage.setItem(PENDING_KEY, JSON.stringify(arr));
+}
+function updatePendingCount() {
+  const p = getPending();
+  const el = document.getElementById('pendingCount');
+  el.textContent = p.length > 0 ? `${p.length} не отправлено` : '';
+}
+
+async function trySyncPending() {
+  const pending = getPending();
+  if (!pending.length) return;
+  const remaining = [];
+  for (const item of pending) {
+    try {
+      const ok = await sendToServer(item);
+      if (!ok) remaining.push(item);
+    } catch(e) { remaining.push(item); }
+  }
+  savePending(remaining);
+  updatePendingCount();
+}
+
+// --- POINT SELECTION ---
+function selectPoint(point) {
+  currentPoint = point;
+  document.getElementById('inspectorPointName').textContent = point;
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('inspectorDate').value = today;
+  showScreen('inspectorScreen');
+}
+
+// --- START CHECKLIST ---
+async function startChecklist() {
+  const name = document.getElementById('inspectorName').value.trim();
+  const date = document.getElementById('inspectorDate').value;
+  if (!name) { alert('Введите имя проверяющего'); return; }
+  if (!date) { alert('Укажите дату'); return; }
+  currentInspector = name;
+  currentDate = date;
+  zoneAnswers = {};
+
+  document.getElementById('zonePointName').textContent = currentPoint;
+  showScreen('zoneScreen');
+  await loadQuestions(currentPoint);
+}
+
+// --- LOAD QUESTIONS ---
+async function loadQuestions(point) {
+  const cacheKey = CACHE_KEY + '_' + point;
+  let questions = null;
+
+  if (navigator.onLine) {
+    try {
+      const res = await fetch(API_URL + '?action=getQuestions&point=' + encodeURIComponent(point));
+      const data = await res.json();
+      if (data.questions) {
+        questions = data.questions;
+        localStorage.setItem(cacheKey, JSON.stringify(questions));
+      }
+    } catch(e) {}
+  }
+
+  if (!questions) {
+    const cached = localStorage.getItem(cacheKey);
+    if (cached) questions = JSON.parse(cached);
+  }
+
+  if (!questions) {
+    document.getElementById('zoneList').innerHTML = '<div class="loading">Нет интернета и нет кэша.<br>Подключитесь и попробуйте снова.</div>';
+    return;
+  }
+
+  // Group by zone
+  allQuestions = {};
+  zones = [];
+  for (const q of questions) {
+    if (!allQuestions[q.zone]) { allQuestions[q.zone] = []; zones.push(q.zone); }
+    allQuestions[q.zone].push(q);
+  }
+
+  renderZoneList();
+}
+
+// --- RENDER ZONE LIST ---
+function renderZoneList() {
+  const list = document.getElementById('zoneList');
+  list.innerHTML = '';
+  const doneCount = Object.keys(zoneAnswers).length;
+  const total = zones.length;
+
+  document.getElementById('progressFill').style.width = (total ? (doneCount/total*100) : 0) + '%';
+
+  zones.forEach((zone, i) => {
+    const done = !!zoneAnswers[zone];
+    const div = document.createElement('div');
+    div.className = 'zone-item' + (done ? ' done' : '');
+    div.innerHTML = `
+      <div class="zone-num">${i+1}</div>
+      <div class="zone-info">
+        <div class="zone-name">${zone}</div>
+        <div class="zone-status">${done ? 'Выполнено' : allQuestions[zone].length + ' вопросов'}</div>
+      </div>
+      <div class="zone-check">✓</div>
+    `;
+    div.onclick = () => openZone(zone);
+    list.appendChild(div);
+  });
+
+  const submitBtn = document.getElementById('submitBtn');
+  submitBtn.disabled = doneCount < total;
+}
+
+// --- OPEN ZONE ---
+function openZone(zone) {
+  currentZone = zone;
+  document.getElementById('questionZoneName').textContent = zone;
+  renderQuestions(zone);
+  showScreen('questionScreen');
+}
+
+// --- RENDER QUESTIONS ---
+function renderQuestions(zone) {
+  const list = document.getElementById('questionsList');
+  list.innerHTML = '';
+  const qs = allQuestions[zone] || [];
+  const saved = zoneAnswers[zone] || {};
+
+  qs.forEach((q, idx) => {
+    if (q.type === 'photo') return;
+
+    const block = document.createElement('div');
+    block.className = 'question-block';
+    const savedAns = saved[idx] || {};
+    const photos = savedAns.photos || [];
+    const isX = savedAns.answer === 'X';
+
+    if (q.type === 'check') {
+      block.innerHTML = `
+        <div class="question-text">${q.question}</div>
+        <div class="vx-btns">
+          <button class="vx-btn v-btn${savedAns.answer === 'V' ? ' selected' : ''}" onclick="setAnswer(${idx}, 'V', this)">V</button>
+          <button class="vx-btn x-btn${savedAns.answer === 'X' ? ' selected' : ''}" onclick="setAnswer(${idx}, 'X', this)">X</button>
+        </div>
+        <div class="photo-section${isX ? ' visible' : ''}" id="photoSection_${idx}">
+          <div class="photo-grid" id="photoGrid_${idx}"></div>
+          <label class="add-photo-btn" id="addPhotoBtn_${idx}">
+            <span style="font-size:16px">📷</span>
+            <span>Прикрепить фото (до 5)</span>
+            <input type="file" accept="image/*" capture="environment" onchange="addPhotoToQuestion(${idx}, this)">
+          </label>
+        </div>
+      `;
+    } else if (q.type === 'text') {
+      block.innerHTML = `
+        <div class="question-text">${q.question}</div>
+        <textarea class="text-answer" placeholder="Введите комментарий..." onchange="setTextAnswer(${idx}, this.value)">${savedAns.answer || ''}</textarea>
+      `;
+    }
+
+    list.appendChild(block);
+    if (q.type === 'check' && photos.length > 0) {
+      renderQuestionPhotos(idx, photos);
+    }
+  });
+}
+
+function renderQuestionPhotos(idx, photos) {
+  const grid = document.getElementById('photoGrid_' + idx);
+  const addBtn = document.getElementById('addPhotoBtn_' + idx);
+  if (!grid) return;
+  grid.innerHTML = '';
+  photos.forEach((src, i) => {
+    const wrap = document.createElement('div');
+    wrap.className = 'photo-thumb-wrap';
+    wrap.innerHTML = `<img src="${src}"><button class="photo-remove" onclick="removeQuestionPhoto(${idx}, ${i})">×</button>`;
+    grid.appendChild(wrap);
+  });
+  if (addBtn) addBtn.style.display = photos.length >= 5 ? 'none' : 'flex';
+}
+
+function compressPhoto(file, callback) {
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const img = new Image();
+    img.onload = () => {
+      const MAX = 1200;
+      let w = img.width, h = img.height;
+      if (w > MAX || h > MAX) {
+        if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
+        else { w = Math.round(w * MAX / h); h = MAX; }
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      callback(canvas.toDataURL('image/jpeg', 0.8));
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function addPhotoToQuestion(idx, input) {
+  const file = input.files[0];
+  if (!file) return;
+  compressPhoto(file, (compressed) => {
+    if (!zoneAnswers[currentZone]) zoneAnswers[currentZone] = {};
+    if (!zoneAnswers[currentZone][idx]) zoneAnswers[currentZone][idx] = {};
+    if (!zoneAnswers[currentZone][idx].photos) zoneAnswers[currentZone][idx].photos = [];
+    const photos = zoneAnswers[currentZone][idx].photos;
+    if (photos.length >= 5) return;
+    photos.push(compressed);
+    renderQuestionPhotos(idx, photos);
+    input.value = '';
+  });
+}
+
+function removeQuestionPhoto(idx, photoIdx) {
+  if (!zoneAnswers[currentZone] || !zoneAnswers[currentZone][idx]) return;
+  zoneAnswers[currentZone][idx].photos.splice(photoIdx, 1);
+  renderQuestionPhotos(idx, zoneAnswers[currentZone][idx].photos);
+}
+
+// --- ANSWER HANDLERS ---
+function setAnswer(idx, val, btn) {
+  if (!zoneAnswers[currentZone]) zoneAnswers[currentZone] = {};
+  if (!zoneAnswers[currentZone][idx]) zoneAnswers[currentZone][idx] = {};
+  zoneAnswers[currentZone][idx].answer = val;
+  zoneAnswers[currentZone][idx].question = allQuestions[currentZone][idx].question;
+  zoneAnswers[currentZone][idx].zone = currentZone;
+
+  const parent = btn.closest('.vx-btns');
+  parent.querySelectorAll('.vx-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+
+  // Show photo section only when X is selected
+  const photoSection = document.getElementById('photoSection_' + idx);
+  if (photoSection) {
+    photoSection.classList.toggle('visible', val === 'X');
+  }
+}
+
+function setTextAnswer(idx, val) {
+  if (!zoneAnswers[currentZone]) zoneAnswers[currentZone] = {};
+  if (!zoneAnswers[currentZone][idx]) zoneAnswers[currentZone][idx] = {};
+  zoneAnswers[currentZone][idx].answer = val;
+  zoneAnswers[currentZone][idx].question = allQuestions[currentZone][idx].question;
+  zoneAnswers[currentZone][idx].zone = currentZone;
+}
+
+
+
+// --- SAVE ZONE ---
+function saveZone() {
+  if (!zoneAnswers[currentZone]) zoneAnswers[currentZone] = {};
+  showScreen('zoneScreen');
+  renderZoneList();
+}
+
+// --- SUBMIT ALL ---
+async function submitAll() {
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  btn.textContent = 'Отправка...';
+
+  // Collect answers - text only first
+  const answers = [];
+  const photoQueue = []; // {zone, question, photos}
+
+  for (const zone of zones) {
+    const za = zoneAnswers[zone] || {};
+    const qs = allQuestions[zone] || [];
+    qs.forEach((q, idx) => {
+      if (q.type === 'photo') return;
+      const a = za[idx] || {};
+      answers.push({
+        zone: q.zone,
+        question: q.question,
+        answer: a.answer || '—',
+        photos: [] // send without photos first
+      });
+      // Queue photos separately
+      if (a.photos && a.photos.length > 0) {
+        photoQueue.push({
+          zone: q.zone,
+          question: q.question + ' [фото]',
+          photos: a.photos
+        });
+      }
+    });
+  }
+
+  const payload = {
+    action: 'saveAnswers',
+    point: currentPoint,
+    inspector: currentInspector,
+    date: currentDate,
+    answers
+  };
+
+  let sent = false;
+  if (navigator.onLine) {
+    try {
+      sent = await sendToServer(payload);
+    } catch(e) {}
+
+    // Send each photo as individual request
+    if (sent && photoQueue.length > 0) {
+      let totalPhotos = 0;
+      photoQueue.forEach(item => totalPhotos += item.photos.length);
+      let sentPhotos = 0;
+
+      for (const item of photoQueue) {
+        for (let i = 0; i < item.photos.length; i++) {
+          sentPhotos++;
+          btn.textContent = `Отправка фото ${sentPhotos}/${totalPhotos}...`;
+          try {
+            await sendToServer({
+              action: 'saveAnswers',
+              point: currentPoint,
+              inspector: currentInspector,
+              date: currentDate,
+              answers: [{
+                zone: item.zone,
+                question: item.question + ' ' + (i+1),
+                answer: 'фото',
+                photos: [item.photos[i]]
+              }]
+            });
+          } catch(e) {}
+        }
+      }
+    }
+  }
+
+  if (!sent) {
+    const pending = getPending();
+    pending.push(payload);
+    savePending(pending);
+    updatePendingCount();
+    document.getElementById('successMsg').textContent = 'Нет интернета — ответы сохранены на телефоне и будут отправлены автоматически при подключении.';
+  } else {
+    document.getElementById('successMsg').textContent = 'Результаты успешно отправлены в Google Таблицу.';
+  }
+
+  showScreen('successScreen');
+}
+
+async function sendToServer(payload) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 30000);
+  try {
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+      signal: controller.signal
+    });
+    clearTimeout(timeout);
+    const text = await res.text();
+    try {
+      const data = JSON.parse(text);
+      return !!data.success;
+    } catch(e) {
+      console.error('Parse error:', text);
+      return false;
+    }
+  } catch(e) {
+    clearTimeout(timeout);
+    console.error('Fetch error:', e);
+    return false;
+  }
+}
+
+// Init
+updatePendingCount();
+</script>
+</body>
+</html>
